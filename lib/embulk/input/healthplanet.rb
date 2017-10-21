@@ -16,7 +16,7 @@ module Embulk
       REDIRECT_URI = 'https://www.healthplanet.jp/success.html'
 
       # Default scope
-      DEFAULT_SCOPE = 'innerscan'
+      DEFAULT_SCOPE = 'sphygmomanometer'
 
       # Default response type
       DEFAULT_RESPONSE_TYPE = 'code'
@@ -25,7 +25,7 @@ module Embulk
       DEFAULT_GRANT_TYPE = 'authorization_code'
 
       # All tags for innerscan
-      ALL_TAGS = '6021,6022,6023,6024,6025,6026,6027,6028,6029'
+      ALL_TAGS = '622E,622F,6230'
 
       # Health Planet API can response only in 3 months
       RESPONSE_INTERVAL = 60*60*24*30*3
@@ -53,17 +53,9 @@ module Embulk
         columns = [
           Column.new(0, col.name(:time), :timestamp),
           Column.new(1, col.name(:model), :string),
-          Column.new(2, col.name(:weight), :double),
-          Column.new(3, col.name(:body_fat), :double),
-          Column.new(4, col.name(:muscle_mass), :double),
-          Column.new(5, col.name(:muscle_score), :long),
-          Column.new(6, col.name(:visceral_fat2), :double),
-          Column.new(7, col.name(:visceral_fat1), :long),
-          Column.new(8, col.name(:metabolic_rate), :long),
-          Column.new(9, col.name(:metabolic_age), :long),
-          Column.new(10, col.name(:bone_mass), :double),
-          # Not supported by Health Planet API Ver. 1.0
-#          Column.new(11, 'body water mass', :string),
+          Column.new(2, col.name(:sbp), :long),
+          Column.new(3, col.name(:dbp), :long),
+          Column.new(4, col.name(:pulse), :long),
         ]
 
         resume(task, columns, 1, &control)
@@ -170,7 +162,7 @@ module Embulk
 
       def innerscan(from = nil, to = nil)
         response = @conn.get do |req|
-          req.url 'status/innerscan.json'
+          req.url 'status/sphygmomanometer.json'
           req.params[:access_token] = @access_token
           # 0: registered time, 1: measured time
           req.params[:date] = 1
@@ -195,39 +187,21 @@ module Embulk
         last_date = dates.last
 
         dates.each do |date|
-          page = Array.new(11)
+          page = Array.new(5)
           page[0] = date
           result[date].each do |key, value|
             case key
             when 'model'
               page[1] = value
-            when '6021'
-              # weight
-              page[2] = value.to_f
-            when '6022'
-              # body fat %
-              page[3] = value.to_f
-            when '6023'
-              # muscle mass
-              page[4] = value.to_f
-            when '6024'
-              # muscle score
-              page[5] = value.to_i
-            when '6025'
-              # visceral fat level 2
-              page[6] = value.to_f
-            when '6026'
-              # visceral fat level 1
-              page[7] = value.to_i
-            when '6027'
-              # basal metabolic rate
-              page[8] = value.to_i
-            when '6028'
-              # metabolic age
-              page[9] = value.to_i
-            when '6029'
-              # estimated bone mass
-              page[10] = value.to_f
+            when '622E'
+              # SBP
+              page[2] = value
+            when '622F'
+              # DBP
+              page[3] = value
+            when '6230'
+              # Pulse
+              page[4] = value
             end
           end
 
