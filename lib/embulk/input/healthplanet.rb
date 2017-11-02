@@ -156,6 +156,8 @@ module Embulk
         unless preview? or last_date.nil?
           # Next request must start from 1 minute later to avoid redundant data
           task_report = { :next_from => (last_date + 60).strftime('%Y-%m-%d %H:%M:%S') }
+        else
+          task_report = { :next_from => (Time.now).strftime('%Y-%m-%d %H:%M:%S') }
         end
         return task_report
       end
