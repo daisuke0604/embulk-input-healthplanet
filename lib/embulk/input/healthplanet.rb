@@ -28,7 +28,7 @@ module Embulk
       ALL_TAGS = '622E,622F,6230'
 
       # Health Planet API can response only in 3 months
-      RESPONSE_INTERVAL = 60*60*24*30*3
+      RESPONSE_INTERVAL = 3
 
       # embulk-input-healthplanet retrieves data from one year ago by default
       # If you need data more than one year ago, please set 'next_from' parameter
@@ -141,7 +141,11 @@ module Embulk
         last_date = nil
 
         while from < Time.now
-          to = from + RESPONSE_INTERVAL
+          if from.month + RESPONSE_INTERVAL > 12 then
+            to = Time.mktime(from.year + 1, from.month + RESPONSE_INTERVAL - 12, from.day, from.hour, from.min, from.sec)
+          else
+            to = Time.mktime(from.year, from.month + RESPONSE_INTERVAL, from.day, from.hour, from.min, from.sec)
+          end
           date = innerscan(from, to)
           # Update last_date if any data exists
           last_date = date if date
